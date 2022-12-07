@@ -1,18 +1,22 @@
-DROP DATABASE IF EXISTS company;
-CREATE DATABASE company;
+DROP TABLE IF EXISTS department;
+DROP TABLE IF EXISTS roles;
+DROP TABLE IF EXISTS employee;
 
 USE company;
 
 CREATE TABLE department (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(30) UNIQUE NOT NULL
+  names VARCHAR(30) NOT NULL
 );
 
-CREATE TABLE role (
+CREATE TABLE roles (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  title VARCHAR(30) UNIQUE NOT NULL,
+  title VARCHAR(30) NOT NULL,
   salary DECIMAL NOT NULL,
   department_id INT NOT NULL,
+  CONSTRAINT fk_department
+    FOREIGN KEY (department_id)
+    REFERENCES department(id)
 );
 
 CREATE TABLE employee (
@@ -21,4 +25,6 @@ CREATE TABLE employee (
   last_name VARCHAR(30) NOT NULL,
   role_id INT NOT NULL,/*hold reference to employee role*/
   manager_id INT/*hold reference to another employee that is the manager of the current employee, null if the employee has no manager*/
+  CONSTRAINT fk_roles FOREIGN KEY (role_id) REFERENCES roles(id)
+  CONSTRAINT fk_roles FOREIGN KEY (manager_id) REFERENCES roles(id)
 );
