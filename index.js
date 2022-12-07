@@ -1,6 +1,7 @@
 const inquirer = require('inquirer');
 const db = require('./db/connection');
 const cTable = require('console.table');
+const Department = require('./lib/Department');
 
 function mainMenu(){
     inquirer.prompt([
@@ -31,13 +32,39 @@ function mainMenu(){
 }
 
 
-
+function viewAllDepartments() {
+    db.query('SELECT * FROM department', function (err, res) {
+        if (err) throw err;
+        cTable(res);
+        mainMenu()
+    })
+}
 function viewAllRoles() {
+db.query('SELECT * FROM roles', function (err, res) {
+    if (err) throw (err);
+    cTable(res);
+    mainMenu()
+})
+}
 
+function viewAllEmployees() {
+    db.query('SELECT * FROM employee', function (err,res) {
+        if (err) throw (err);
+        cTable(res);
+        mainMenu()
+    })
 }
 
 function addDepartment() {
-
+    inquirer.prompt([
+        {
+            type: 'input',
+            name: 'departmentName',
+            message: 'What is the name of the department you would like to add?'
+        }.then(response) => {
+            let department = new Department(response.name, )
+        }
+    ])
 }
 
 function addRole() {
