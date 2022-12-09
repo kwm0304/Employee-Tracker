@@ -1,13 +1,26 @@
+db.connect(function (err) {
+    if (err) throw err;
+    console.log('Connected');
+    init()
+})
+
 const inquirer = require('inquirer');
 const db = require('./db/connection');
 const cTable = require('console.table');
 const Department = require('./lib/Department');
 const Role = require('./lib/Role')
-const Rx = require('rx')
+const Employee = require('./lib/Employee')
 
 function init() {
+
 let departmentArray = ['Sales', 'Engineering', 'Finance', 'Legal']
-function mainMenu(){
+let roleArray = []
+
+async function mainMenu(){
+    let managers = await connection.query(
+    `SELECT * FROM employees WHERE employees.manager_id IS NULL`
+  );
+  console.table(managers);
     inquirer.prompt([
         {
             type: 'list',
@@ -35,30 +48,34 @@ function mainMenu(){
     })
 }
 
-
+//shows dept names and id's
 function viewAllDepartments() {
     db.query('SELECT * FROM department', function (err, res) {
         if (err) throw err;
-        cTable(res);
+        console.table(res);
         mainMenu()
     })
 }
+
+//shows job title, role id, the dept that role belongs to, and salary for that role
 function viewAllRoles() {
 db.query('SELECT * FROM roles', function (err, res) {
     if (err) throw (err);
-    cTable(res);
+    console.table(res);
     mainMenu()
 })
 }
 
+//employee id's, first names, last names, job titles, departments, salaries and manager they report to
 function viewAllEmployees() {
     db.query('SELECT * FROM employee', function (err,res) {
         if (err) throw (err);
-        cTable(res);
+        console.table(res);
         mainMenu()
     })
 }
 
+//enter name of dept -> add that name to db
 function addDepartment() {
     inquirer.prompt([
         {
@@ -72,6 +89,7 @@ function addDepartment() {
     })    
 }
 
+//enter the name, salary and dept for the role -> role is then added to db
 function addRole() {
 
     inquirer.prompt([
@@ -105,7 +123,7 @@ function addRole() {
         }
     ]).then((response) => {
         const sql = `INSERT INTO roles(title, salary, departmet_id) VALUES (?,?,?)`;
-        const role = new Role(response.title, response.salary, response.department_id)
+        const role = new Role(response.roleName.title, response.roleSalary.salary, response.roleDept.department_id)
         db.query(sql, role, (err, res) => {
             if (err) throw err;
             console.log('Role added')
@@ -114,13 +132,51 @@ function addRole() {
     })
 } 
 
-function addEmployee() {
+//prompted to enter the employee’s first name, last name, role, and manager, and that employee is added to the database
+async function addEmployee() {
+    let managers = await connection.query(
+        `SELECT * FROM employees WHERE employees.manager_id IS NULL`
+      );
+      console.table(managers);
+    inquirer.prompt([
+        {
+            type: 'input',
+            name: 'firstName',
+            message: 'First name of employee:'
+        },
+        {
+            type: 'input',
+            name: 'lastName',
+            message: 'Last name of employee:'
+        },
+        {
+            type: 'list',
+            name: 'empRole',
+            message: "What is the employee's role?",
+            choices: roleArray
+        },
+        {
+            type: 'list',
+            name: 'empManager',
+            message: "Who is the employee's manager?",
+            choices: managers
+        }
+
+
+    ])
+    const sql = `INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`;
+    const employee = new Employee(response.firstName.first_name, response.lastName.last_name, response.empRole.role_id, response.empManager.manager_id)
+        db.query(sql, employee, (err, res) => {
+            if (err) throw err;
+            console.log('Employee added')
+        })
+        mainMenu()
 
 }
 
+//select an employee to update and their new role and this information is updated in the database
 function updateRole() {
 
 }
 }
 
-l
