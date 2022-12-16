@@ -126,10 +126,8 @@ function addRole() {
             choices: [1,2,3,4,5]
         }
     ]).then((response) => {
-        const sql = `INSERT INTO roles (title, salary, departmet_id) VALUES (?,?,?)`;
-        const role = new Role(response.roleName, response.roleSalary, response.roleDept);
-        db.query(sql, role, (err, response) => {
-            
+        const sql = `INSERT INTO roles (title, salary, departmet_id) VALUES ('${response.roleName}',${response.roleSalary},${response.roleDept})`;
+        db.query(sql, (err, response) => {
             if (err) throw err;
             console.log('Role added')
             console.table(response)
