@@ -122,14 +122,14 @@ function addRole() {
         {
             type: 'rawlist',
             name: 'roleDept',
-            message: 'What department will this role be in?',
-            choices: departmentArray
+            message: 'Enter the corresponding number for the department this role will be added to: (1 = Sales, 2 = Engineering, 3= Finance, 4 = Legal, 5 = Maintenance',
+            choices: [1,2,3,4,5]
         }
     ]).then((response) => {
         const sql = `INSERT INTO roles (title, salary, departmet_id) VALUES (?,?,?)`;
-        const role = new Role(response.roleName, response.roleSalary, response.roleDept)
-        db.query(sql, role, (err, res) => {
-            console.log(role)
+        const role = new Role(response.roleName, response.roleSalary, response.roleDept);
+        db.query(sql, role, (err, response) => {
+            
             if (err) throw err;
             console.log('Role added')
             console.table(response)
