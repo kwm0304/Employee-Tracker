@@ -1,9 +1,3 @@
-db.connect(function (err) {
-    if (err) throw err;
-    console.log('Connected');
-    init()
-})
-
 const inquirer = require('inquirer');
 const db = require('./db/connection');
 const cTable = require('console.table');
@@ -11,16 +5,18 @@ const Department = require('./lib/Department');
 const Role = require('./lib/Role')
 const Employee = require('./lib/Employee')
 
-function init() {
+db.connect(err => {
+    if (err) throw err;
+    console.log('Database connected.');
+    mainMenu();
+})
+
 
 let departmentArray = ['Sales', 'Engineering', 'Finance', 'Legal']
 let roleArray = []
 
-async function mainMenu(){
-    let managers = await connection.query(
-    `SELECT * FROM employees WHERE employees.manager_id IS NULL`
-  );
-  console.table(managers);
+function mainMenu(){
+    
     inquirer.prompt([
         {
             type: 'list',
@@ -50,7 +46,7 @@ async function mainMenu(){
 
 //shows dept names and id's
 function viewAllDepartments() {
-    db.query('SELECT * FROM department', function (err, res) {
+    db.query('SELECT department.id AS id, department.name AS department FROM department', function (err, res) {
         if (err) throw err;
         console.table(res);
         mainMenu()
@@ -59,7 +55,7 @@ function viewAllDepartments() {
 
 //shows job title, role id, the dept that role belongs to, and salary for that role
 function viewAllRoles() {
-db.query('SELECT * FROM roles', function (err, res) {
+db.query('SELECT role.id, role.title, department.name AS department FROM role INNER JOIN department ON role.department_id = department.id', function (err, res) {
     if (err) throw (err);
     console.table(res);
     mainMenu()
@@ -68,15 +64,25 @@ db.query('SELECT * FROM roles', function (err, res) {
 
 //employee id's, first names, last names, job titles, departments, salaries and manager they report to
 function viewAllEmployees() {
-    db.query('SELECT * FROM employee', function (err,res) {
+    const sql = `SELECT employee.id,
+            employee.last_name,
+            role.title,
+            department.name AS department,
+            role.salary,
+            CONCAT (manager.first_name, " ", manager.last_name) AS manager
+            FROM employee
+            LEFT JOIN role ON employee.role_id = role.id
+            LEFT JOIN department ON role.department_id = department.id
+            LEFT JOIN employee manager ON employe.manager_id = manager.id`;
+    db.query(sql, (err, res))
         if (err) throw (err);
         console.table(res);
         mainMenu()
-    })
-}
+    }
 
 //enter name of dept -> add that name to db
 function addDepartment() {
+    
     inquirer.prompt([
         {
             type: 'input',
@@ -84,8 +90,13 @@ function addDepartment() {
             message: 'What is the name of the department you would like to add?'
         }
     ]).then((response) => {
-        let department = new Department(response.name)
-        departmentArray.push(department)
+        let sql = `INSERT INTO department (name) value (?)`;
+        let department = response.departmentName
+        db.query(sql, department, (err, res) => {
+            if (err) {console.log('oops')}
+            else console.log('Department added')
+        })
+        mainMenu()
     })    
 }
 
@@ -175,8 +186,27 @@ async function addEmployee() {
 }
 
 //select an employee to update and their new role and this information is updated in the database
-function updateRole() {
-
-}
-}
-
+async function updateRole() {
+    inquirer.prompt([
+        {
+            type: 'input',
+            name: 'selectEmpFirst',
+            message: 'Enter first name of employee'
+        },
+        {
+            type: 'input',
+            name: 'selectEmpLast',
+            message: 'Enter last name of employee'
+        },
+        {
+            type: 'input',
+            name: 'newRole',
+            message
+        }
+    ]).then((response) => {
+        let first = response.selectEmpFirst;
+        let last = response.selectEmpLast;
+        db.query(
+        `SELECT employee_id FROM employee WHERE first_name ${first} and last_name ${last}`
+    )}
+)}

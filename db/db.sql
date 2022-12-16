@@ -1,0 +1,3 @@
+DROP DATABASE IF EXISTS comapny;
+CREATE DATABASE company;
+USE company;
