@@ -90,7 +90,7 @@ function addDepartment() {
             message: 'What is the name of the department you would like to add?'
         }
     ]).then((response) => {
-        let sql = `INSERT INTO department (name) value (?)`;
+        let sql = `INSERT INTO department (names) value (?)`;
         let department = response.departmentName
         db.query(sql, department, (err, res) => {
             if (err) {console.log('oops')}
@@ -120,24 +120,19 @@ function addRole() {
               filter: Number,
         },
         {
-            type: 'input',
+            type: 'rawlist',
             name: 'roleDept',
             message: 'What department will this role be in?',
-            validate: roleDept => {
-                if (departmentArray.indexOf(roleDept) > -1) {
-                    return true
-                } else {
-                    console.log('Please enter a valid department.')
-                    return false;
-                }
-            }
+            choices: departmentArray
         }
     ]).then((response) => {
-        const sql = `INSERT INTO roles(title, salary, departmet_id) VALUES (?,?,?)`;
-        const role = new Role(response.roleName.title, response.roleSalary.salary, response.roleDept.department_id)
+        const sql = `INSERT INTO roles (title, salary, departmet_id) VALUES (?,?,?)`;
+        const role = new Role(response.roleName, response.roleSalary, response.roleDept)
         db.query(sql, role, (err, res) => {
+            console.log(role)
             if (err) throw err;
             console.log('Role added')
+            console.table(response)
         })
         mainMenu()
     })
@@ -145,10 +140,7 @@ function addRole() {
 
 //prompted to enter the employee’s first name, last name, role, and manager, and that employee is added to the database
 async function addEmployee() {
-    let managers = await connection.query(
-        `SELECT * FROM employees WHERE employees.manager_id IS NULL`
-      );
-      console.table(managers);
+    
     inquirer.prompt([
         {
             type: 'input',
@@ -174,7 +166,11 @@ async function addEmployee() {
         }
 
 
-    ])
+    ]).then((response) => {
+    let managers =  connection.query(
+        `SELECT * FROM employees WHERE employees.manager_id IS NULL`
+      );
+     
     const sql = `INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`;
     const employee = new Employee(response.firstName.first_name, response.lastName.last_name, response.empRole.role_id, response.empManager.manager_id)
         db.query(sql, employee, (err, res) => {
@@ -183,7 +179,7 @@ async function addEmployee() {
             console.table(res)
         })
         mainMenu()
-
+    })
 }
 
 //select an employee to update and their new role and this information is updated in the database
