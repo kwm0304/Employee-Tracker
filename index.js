@@ -46,7 +46,7 @@ function mainMenu(){
 
 //shows dept names and id's
 function viewAllDepartments() {
-    db.query('SELECT department.id AS id, department.name AS department FROM department', function (err, res) {
+    db.query('SELECT department.id AS id, department.names AS department FROM department', function (err, res) {
         if (err) throw err;
         console.table(res);
         mainMenu()
@@ -55,7 +55,7 @@ function viewAllDepartments() {
 
 //shows job title, role id, the dept that role belongs to, and salary for that role
 function viewAllRoles() {
-db.query('SELECT role.id, role.title, department.name AS department FROM role INNER JOIN department ON role.department_id = department.id', function (err, res) {
+db.query('SELECT roles.id, roles.title, roles.salary, department.names AS department FROM roles INNER JOIN department ON roles.department_id = department.id', function (err, res) {
     if (err) throw (err);
     console.table(res);
     mainMenu()
@@ -64,25 +64,25 @@ db.query('SELECT role.id, role.title, department.name AS department FROM role IN
 
 //employee id's, first names, last names, job titles, departments, salaries and manager they report to
 function viewAllEmployees() {
-    const sql = `SELECT employee.id,
+    let sql = `SELECT employee.id,
+            employee.first_name,
             employee.last_name,
-            role.title,
-            department.name AS department,
-            role.salary,
+            roles.title,
+            department.names AS department,
+            roles.salary,
             CONCAT (manager.first_name, " ", manager.last_name) AS manager
             FROM employee
-            LEFT JOIN role ON employee.role_id = role.id
-            LEFT JOIN department ON role.department_id = department.id
-            LEFT JOIN employee manager ON employe.manager_id = manager.id`;
-    db.query(sql, (err, res))
+            LEFT JOIN roles ON employee.role_id = roles.id
+            LEFT JOIN department ON roles.department_id = department.id
+            LEFT JOIN employee manager ON employee.manager_id = manager.id`;
+    db.query(sql, (err, res) => {
         if (err) throw (err);
         console.table(res);
         mainMenu()
-    }
-
+    })
+}
 //enter name of dept -> add that name to db
 function addDepartment() {
-    
     inquirer.prompt([
         {
             type: 'input',
@@ -180,6 +180,7 @@ async function addEmployee() {
         db.query(sql, employee, (err, res) => {
             if (err) throw err;
             console.log('Employee added')
+            console.table(res)
         })
         mainMenu()
 
@@ -187,6 +188,7 @@ async function addEmployee() {
 
 //select an employee to update and their new role and this information is updated in the database
 async function updateRole() {
+    
     inquirer.prompt([
         {
             type: 'input',
@@ -199,9 +201,10 @@ async function updateRole() {
             message: 'Enter last name of employee'
         },
         {
-            type: 'input',
+            type: 'rawlist',
             name: 'newRole',
-            message
+            message: 'New role of employee',
+            choices: roleArray
         }
     ]).then((response) => {
         let first = response.selectEmpFirst;
