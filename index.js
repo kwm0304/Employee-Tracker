@@ -8,12 +8,14 @@ const Employee = require('./lib/Employee')
 db.connect(err => {
     if (err) throw err;
     console.log('Database connected.');
+    
     mainMenu();
 })
 
 
 let departmentArray = ['Sales', 'Engineering', 'Finance', 'Legal']
 let roleArray = []
+
 
 function mainMenu(){
     
@@ -22,7 +24,7 @@ function mainMenu(){
             type: 'list',
             name: 'option',
             message: 'Choose an option:',
-            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role']
+            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'View all managers']
         }
     ]).then((response) => {
         if ((response.option) ==  'View all departments') {
@@ -40,6 +42,8 @@ function mainMenu(){
             return addEmployee()
         } else if ((response.option) == 'Update an employee role') {
             return updateRole()
+        } else if ((response.option) == 'View all managers') {
+            return showManagers()
         }
     })
 }
@@ -58,6 +62,7 @@ function viewAllRoles() {
 db.query('SELECT roles.id, roles.title, roles.salary, department.names AS department FROM roles INNER JOIN department ON roles.department_id = department.id', function (err, res) {
     if (err) throw (err);
     console.table(res);
+    const roleChoices = res.map(({ title }) => {title: `${title}`})
     mainMenu()
 })
 }
@@ -136,9 +141,31 @@ function addRole() {
     })
 } 
 
+async function showManagers() {
+     let sql = `SELECT * from employee WHERE employee.manager_id IS NULL`;
+     db.query(sql, (err,response) => {
+        console.log(err)
+        if (err) throw err;
+        console.table(response)
+        mainMenu()
+     })
+     
+}
 //prompted to enter the employee’s first name, last name, role, and manager, and that employee is added to the database
 async function addEmployee() {
+    var query =
+    `SELECT roles.id, roles.title, roles.salary 
+      FROM roles`
     
+  db.query(query, function (err, res) {
+    if (err) throw err;
+    const roleChoices = res.map(({ id, title, salary }) => ({
+        role_id: `${id}`, title: `${title}`, salary: `${salary}`
+      }))
+    console.log(roleChoices)
+    roleArray.push(roleChoices)
+    console.log(roleArray)
+  })
     inquirer.prompt([
         {
             type: 'input',
@@ -159,26 +186,25 @@ async function addEmployee() {
         {
             type: 'list',
             name: 'empManager',
-            message: "Who is the employee's manager?",
-            choices: managers
+            message: "Pick the corresponding number to the manager: 1 = John Doe/Sales, 2 = Ashley Rodriguez/Engineering, 3 = Kunal Singh/Finance, 4 = Sarah Lourd/Legal",
+            choices: [1,2,3,4]
         }
 
 
-    ]).then((response) => {
-    let managers =  connection.query(
-        `SELECT * FROM employees WHERE employees.manager_id IS NULL`
-      );
-     
-    const sql = `INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`;
-    const employee = new Employee(response.firstName.first_name, response.lastName.last_name, response.empRole.role_id, response.empManager.manager_id)
-        db.query(sql, employee, (err, res) => {
+    ]).then((response) => {     
+        console.log(roleChoices)
+    const sql = `INSERT INTO employee(first_name, last_name, role_id, manager_id) 
+    VALUES ('${response.firstName}','${response.lastName}','${response.empRole}','${response.empManager}')`;
+        db.query(sql, (err, response) => {
+            console.log(err)
             if (err) throw err;
             console.log('Employee added')
-            console.table(res)
+            console.table(response)
         })
         mainMenu()
     })
 }
+
 
 //select an employee to update and their new role and this information is updated in the database
 async function updateRole() {
