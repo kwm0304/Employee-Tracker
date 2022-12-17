@@ -140,6 +140,7 @@ function addRole() {
         mainMenu()
     })
 } 
+//inquirer object name value
 
 async function showManagers() {
      let sql = `SELECT * from employee WHERE employee.manager_id IS NULL`;
@@ -159,13 +160,15 @@ async function addEmployee() {
     
   db.query(query, function (err, res) {
     if (err) throw err;
-    const roleChoices = res.map(({ id, title, salary }) => ({
-        role_id: `${id}`, title: `${title}`, salary: `${salary}`
+    const roleChoices = res.map(({ id, title }) => ({
+        value: `${id}`, name: `${title}`
       }))
     console.log(roleChoices)
-    roleArray.push(roleChoices)
-    console.log(roleArray)
-  })
+   
+    
+    
+  
+
     inquirer.prompt([
         {
             type: 'input',
@@ -181,7 +184,7 @@ async function addEmployee() {
             type: 'list',
             name: 'empRole',
             message: "What is the employee's role?",
-            choices: roleArray
+            choices: roleChoices
         },
         {
             type: 'list',
@@ -204,7 +207,7 @@ async function addEmployee() {
         mainMenu()
     })
 }
-
+  )}
 
 //select an employee to update and their new role and this information is updated in the database
 async function updateRole() {
