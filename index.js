@@ -1,9 +1,6 @@
 const inquirer = require('inquirer');
 const db = require('./db/connection');
 const cTable = require('console.table');
-const Department = require('./lib/Department');
-const Role = require('./lib/Role')
-const Employee = require('./lib/Employee')
 
 db.connect(err => {
     if (err) throw err;
@@ -11,11 +8,6 @@ db.connect(err => {
     
     mainMenu();
 })
-
-
-let departmentArray = ['Sales', 'Engineering', 'Finance', 'Legal']
-let roleArray = []
-
 
 function mainMenu(){
     
@@ -99,7 +91,7 @@ function addDepartment() {
         let department = response.departmentName
         db.query(sql, department, (err, res) => {
             if (err) {console.log('oops')}
-            else console.log('Department added')
+            else console.table(res)
         })
         mainMenu()
     })    
@@ -131,8 +123,9 @@ function addRole() {
             choices: [1,2,3,4,5]
         }
     ]).then((response) => {
-        const sql = `INSERT INTO roles (title, salary, departmet_id) VALUES ('${response.roleName}',${response.roleSalary},${response.roleDept})`;
+        const sql = `INSERT INTO roles (title, salary, department_id) VALUES ('${response.roleName}',${response.roleSalary},${response.roleDept})`;
         db.query(sql, (err, response) => {
+            console.log(err)
             if (err) throw err;
             console.log('Role added')
             console.table(response)
@@ -140,7 +133,7 @@ function addRole() {
         mainMenu()
     })
 } 
-//inquirer object name value
+
 
 async function showManagers() {
      let sql = `SELECT * from employee WHERE employee.manager_id IS NULL`;
