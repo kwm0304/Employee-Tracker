@@ -163,12 +163,6 @@ async function addEmployee() {
     const roleChoices = res.map(({ id, title }) => ({
         value: `${id}`, name: `${title}`
       }))
-    console.log(roleChoices)
-   
-    
-    
-  
-
     inquirer.prompt([
         {
             type: 'input',
@@ -192,10 +186,7 @@ async function addEmployee() {
             message: "Pick the corresponding number to the manager: 1 = John Doe/Sales, 2 = Ashley Rodriguez/Engineering, 3 = Kunal Singh/Finance, 4 = Sarah Lourd/Legal",
             choices: [1,2,3,4]
         }
-
-
     ]).then((response) => {     
-        console.log(roleChoices)
     const sql = `INSERT INTO employee(first_name, last_name, role_id, manager_id) 
     VALUES ('${response.firstName}','${response.lastName}','${response.empRole}','${response.empManager}')`;
         db.query(sql, (err, response) => {
@@ -205,34 +196,69 @@ async function addEmployee() {
             console.table(response)
         })
         mainMenu()
-    })
-}
-  )}
+    });
+    }
+)};
 
 //select an employee to update and their new role and this information is updated in the database
 async function updateRole() {
-    
-    inquirer.prompt([
+    // get employees from employee table 
+    const employeeChoices = `SELECT * FROM employee`;
+  
+    db.query(employeeChoices, (err, data) => {
+      if (err) throw err; 
+  
+    const mapEmployees = data.map(({ id, first_name, last_name }) => ({ name: first_name + " "+ last_name, value: id }));
+  
+      inquirer.prompt([
         {
-            type: 'input',
-            name: 'selectEmpFirst',
-            message: 'Enter first name of employee'
-        },
-        {
-            type: 'input',
-            name: 'selectEmpLast',
-            message: 'Enter last name of employee'
-        },
-        {
-            type: 'rawlist',
-            name: 'newRole',
-            message: 'New role of employee',
-            choices: roleArray
+          type: 'list',
+          name: 'name',
+          message: "Select employee to update",
+          choices: mapEmployees
         }
-    ]).then((response) => {
-        let first = response.selectEmpFirst;
-        let last = response.selectEmpLast;
-        db.query(
-        `SELECT employee_id FROM employee WHERE first_name ${first} and last_name ${last}`
-    )}
-)}
+      ])
+        .then(response => {
+          const employee = response.name;
+          const set = []; 
+          set.push(employee);
+  
+          const sql = `SELECT * FROM roles`;
+  
+          db.query(sql, (err, data) => {
+            if (err) throw err; 
+  
+            const roles = data.map(({ id, title }) => ({ name: title, value: id }));
+            
+              inquirer.prompt([
+                {
+                  type: 'list',
+                  name: 'role',
+                  message: "What is the employee's new role?",
+                  choices: roles
+                }
+              ])
+                  .then(response => {
+                  const role = response.role;
+                  set.push(role); 
+                  
+                  let employee = set[0]
+                  set[0] = role
+                  set[1] = employee 
+                  
+  
+                  // console.log(params)
+  
+                  const sql = `UPDATE employee SET role_id = ? WHERE id = ?`;
+  
+                  db.query(sql, set, (err, res) => {
+                    if (err) throw err;
+                  console.log("Employee has been updated!");
+                
+                  mainMenu();
+            });
+          });
+        });
+      });
+    });
+  };
